@@ -1,1 +1,21 @@
-//Test
+# test_program1.txt
+
+# Simple arithmetic operations
+a = 5
+b = 10
+c = a + b
+
+# Loop to test variable lifetimes in a loop
+i = 0
+while i < 10:
+    d = c * i
+    i = i + 1
+
+# Conditional statement to test variable usage in different blocks
+if d > 20:
+    e = d - 5
+else:
+    e = d + 5
+
+# Final computation
+f = e * 2
