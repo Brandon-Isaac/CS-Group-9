@@ -1,0 +1,127 @@
+For Task 5, I'll guide you through a detailed documentation outline for your register allocation module. This documentation will cover the key design decisions, implementation details, testing methodology, and evaluation of your register allocation project. Below is a structured example report that you can adapt and expand based on your specific implementation.
+
+---
+
+## Register Allocation Module Documentation
+
+### Table of Contents
+
+1. [Introduction](#introduction)
+2. [Background on Register Allocation](#background-on-register-allocation)
+3. [Design Decisions](#design-decisions)
+4. [Implementation](#implementation)
+5. [Testing and Evaluation](#testing-and-evaluation)
+6. [Conclusion and Future Work](#conclusion-and-future-work)
+
+---
+
+### 1. Introduction
+
+**Objective**:  
+The goal of this project is to design and implement a register allocation module for a simple compiler framework. This module assigns a potentially unbounded number of variables to a limited set of physical CPU registers, with the objective of optimizing performance and minimizing memory access.
+
+**Project Scope**:  
+This report details the register allocation design, covering key areas such as algorithm choice, handling of register limitations (spilling), and integration with the compiler framework. Additionally, the report evaluates the module’s performance through tests on various types of programs, analyzing metrics like execution time, memory usage, and spill count.
+
+---
+
+### 2. Background on Register Allocation
+
+**Register Allocation in Compilers**  
+Register allocation is a fundamental optimization phase in compiler design. When translating high-level code to machine code, variables must be mapped to a limited set of CPU registers. A good register allocation strategy reduces memory access (spills) and improves performance by efficiently utilizing available registers.
+
+**Algorithms Considered**  
+The two main algorithms commonly used in register allocation are:
+   - **Graph Coloring**: Treats variables as nodes in an interference graph, where an edge between two nodes indicates they cannot share the same register. The challenge is to "color" the graph with the fewest colors, representing registers, while avoiding conflicts.
+   - **Linear Scan**: Scans through variables linearly, allocating registers as needed. Although less optimal than graph coloring, linear scan has a simpler implementation and is well-suited for just-in-time compilation environments.
+
+---
+
+### 3. Design Decisions
+
+**Algorithm Selection**  
+After analyzing both algorithms, we chose the **graph coloring algorithm** because:
+   - It provides efficient register utilization, especially in programs with complex variable interactions.
+   - It handles situations with limited registers more effectively by identifying and reducing conflicts.
+
+**Key Features**  
+1. **Interference Graph**: Our allocator constructs an interference graph where nodes represent variables and edges indicate conflicts.
+2. **Spilling**: When registers are insufficient, variables are temporarily stored in memory (spilled) to free up registers.
+3. **Coalescing**: Reduces the number of `move` instructions by merging the live ranges of variables that can be assigned to the same register.
+4. **Live Range Splitting**: Breaks variable live ranges into smaller segments, allowing for better reuse of registers.
+
+**Module Integration**  
+The allocator was integrated into the compiler pipeline following the intermediate code generation phase. This design ensures that variables with overlapping lifetimes are properly managed, providing a smooth transition to the final machine code generation stage.
+
+---
+
+### 4. Implementation
+
+**File Structure**  
+The module’s code is divided into several files:
+
+- **`main.cpp`**: Initializes and orchestrates the register allocation process.
+- **`register_allocator.h` / `register_allocator.cpp`**: Core register allocation logic, managing liveness analysis, graph construction, and register assignment.
+- **`graph.h` / `graph.cpp`**: Manages the interference graph, including graph coloring and edge management.
+- **`liveness.h` / `liveness.cpp`**: Handles liveness analysis, determining variable lifetimes in the code.
+- **`utils.h`**: Contains helper functions for debugging and logging.
+
+**Interference Graph Construction**  
+In `register_allocator.cpp`, we perform the following steps to build the interference graph:
+1. **Liveness Analysis**: For each variable, we determine where it is live (in use), creating a "live range" for it.
+2. **Graph Nodes and Edges**: Each variable is represented as a node. If two variables have overlapping live ranges, we add an edge between them, indicating that they cannot share the same register.
+
+**Graph Coloring and Spilling**  
+The graph coloring algorithm assigns colors (registers) to each node:
+- If no color (register) is available, the variable is spilled to memory, and memory load/store operations are added to the code.
+- Our implementation uses a greedy heuristic for coloring, attempting to minimize the number of spills.
+
+**Code Walkthrough**  
+- **`allocateRegisters` function**: Coordinates liveness analysis, graph construction, and register assignment.
+- **`performLivenessAnalysis` function**: Determines the live ranges of each variable.
+- **`assignRegisters` function**: Applies graph coloring and manages register assignment or spilling as necessary.
+
+---
+
+### 5. Testing and Evaluation
+
+**Test Suite**  
+Our testing suite includes sample programs with different control structures to assess the allocator’s robustness. Key test cases include:
+- **Simple Programs**: Programs with few variables and no control structures.
+- **Loops and Conditionals**: Programs with nested loops and branching to test the allocator’s handling of variable lifetimes.
+- **Function Calls**: Programs with functions and arguments to test register reuse across function boundaries.
+
+**Evaluation Metrics**  
+1. **Number of Spills**: Counts the number of variables spilled to memory.
+2. **Execution Time**: Measures the time taken to execute the allocated code.
+3. **Memory Usage**: Monitors memory usage to check for efficiency.
+
+**Results and Analysis**  
+- **Spill Count**: The allocator showed a low spill count for most test cases, with higher spills in deeply nested loops.
+- **Execution Time**: The graph coloring allocator was slower than a naive allocator, but the executed code ran significantly faster due to reduced memory accesses.
+- **Memory Usage**: The module efficiently handled memory, only spilling when strictly necessary.
+
+The results indicate that our graph coloring approach provides a good balance between compile-time performance and run-time efficiency, handling register constraints effectively.
+
+**Comparison with Baseline**  
+We compared our allocator’s performance with a simple baseline allocator that did not account for interference. Our module achieved up to a **40% reduction in memory access** due to lower spill counts, demonstrating the benefits of the graph coloring approach.
+
+---
+
+### 6. Conclusion and Future Work
+
+**Summary**  
+This project successfully implemented a register allocation module using a graph coloring algorithm. The allocator optimally mapped variables to registers, reducing memory access and improving performance.
+
+**Challenges**  
+1. Constructing the interference graph in programs with complex control flow.
+2. Balancing between the number of registers and the need for spilling.
+
+**Future Improvements**  
+- **Spill Optimization**: Integrate more sophisticated spilling strategies to reduce spill frequency.
+- **Advanced Graph Coloring**: Explore optimizations, like priority-based coloring, to further enhance register usage.
+- **Dynamic Allocation**: Implement a hybrid allocator that switches between linear scan and graph coloring based on program complexity.
+
+---
+
+This documentation provides a comprehensive overview of the register allocator’s design, implementation, testing, and performance. Each section can be expanded with more technical detail or code snippets to provide further clarity.
